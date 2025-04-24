@@ -635,6 +635,7 @@ public class ServerMainModule
         configBinder(binder).bindConfig(StaticFunctionNamespaceStoreConfig.class);
         binder.bind(FunctionAndTypeManager.class).in(Scopes.SINGLETON);
         binder.bind(MetadataManager.class).in(Scopes.SINGLETON);
+        jaxrsBinder(binder).bind(CatalogResource.class);
 
         if (serverConfig.isCatalogServerEnabled() && serverConfig.isCoordinator()) {
             binder.bind(RemoteMetadataManager.class).in(Scopes.SINGLETON);

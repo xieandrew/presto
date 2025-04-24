@@ -16,6 +16,9 @@ package com.facebook.presto.metadata;
 import com.facebook.presto.spi.ConnectorId;
 import com.facebook.presto.spi.connector.Connector;
 
+import java.util.Collections;
+import java.util.Map;
+
 import static com.facebook.presto.metadata.MetadataUtil.checkCatalogName;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
@@ -32,6 +35,8 @@ public class Catalog
     private final ConnectorId systemTablesId;
     private final Connector systemTables;
 
+    private final Map<String, String> configProperties;
+
     public Catalog(
             String catalogName,
             ConnectorId connectorId,
@@ -41,6 +46,19 @@ public class Catalog
             ConnectorId systemTablesId,
             Connector systemTables)
     {
+        this(catalogName, connectorId, connector, informationSchemaId, informationSchema, systemTablesId, systemTables, Collections.emptyMap());
+    }
+
+    public Catalog(
+            String catalogName,
+            ConnectorId connectorId,
+            Connector connector,
+            ConnectorId informationSchemaId,
+            Connector informationSchema,
+            ConnectorId systemTablesId,
+            Connector systemTables,
+            Map<String, String> configProperties)
+    {
         this.catalogName = checkCatalogName(catalogName);
         this.connectorId = requireNonNull(connectorId, "connectorId is null");
         this.connector = requireNonNull(connector, "connector is null");
@@ -48,6 +66,7 @@ public class Catalog
         this.informationSchema = requireNonNull(informationSchema, "informationSchema is null");
         this.systemTablesId = requireNonNull(systemTablesId, "systemTablesId is null");
         this.systemTables = requireNonNull(systemTables, "systemTables is null");
+        this.configProperties = requireNonNull(configProperties, "configProperties is null");
     }
 
     public String getCatalogName()
@@ -82,6 +101,11 @@ public class Catalog
             return systemTables;
         }
         throw new IllegalArgumentException("Unknown connector id: " + connectorId);
+    }
+
+    public Map<String, String> getConfigProperties()
+    {
+        return configProperties;
     }
 
     @Override
