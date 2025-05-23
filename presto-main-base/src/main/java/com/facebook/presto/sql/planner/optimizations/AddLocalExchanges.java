@@ -927,6 +927,13 @@ public class AddLocalExchanges
             checkArgument(requiredProperties.getPartitioningColumns().map(node.getOutputVariables()::containsAll).orElse(true));
             checkArgument(preferredProperties.getPartitioningColumns().map(node.getOutputVariables()::containsAll).orElse(true));
 
+            if (node instanceof RowNumberNode && ((RowNumberNode) node).getSource() instanceof ExchangeNode) {
+                ExchangeNode exchangeSource = (ExchangeNode) ((RowNumberNode) node).getSource();
+                if (exchangeSource.isEnsureSourceOrdering()) {
+                    requiredProperties = requiredProperties.withOrderSensitivity();
+                }
+            }
+
             // plan the node using the preferred properties
             PlanWithProperties result = accept(node, preferredProperties);
 
