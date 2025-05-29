@@ -15,6 +15,8 @@ package com.facebook.presto.sql.planner;
 
 import com.facebook.presto.Session;
 import com.facebook.presto.common.block.SortOrder;
+import com.facebook.presto.cost.PlanCostEstimate;
+import com.facebook.presto.cost.StatsAndCosts;
 import com.facebook.presto.functionNamespace.FunctionNamespaceManagerPlugin;
 import com.facebook.presto.functionNamespace.json.JsonFileBasedFunctionNamespaceManagerFactory;
 import com.facebook.presto.spi.PrestoException;
@@ -31,6 +33,7 @@ import com.facebook.presto.spi.plan.TableScanNode;
 import com.facebook.presto.spi.plan.TopNNode;
 import com.facebook.presto.spi.plan.ValuesNode;
 import com.facebook.presto.spi.relation.VariableReferenceExpression;
+import com.facebook.presto.sql.Optimizer;
 import com.facebook.presto.sql.analyzer.FeaturesConfig.JoinDistributionType;
 import com.facebook.presto.sql.planner.assertions.BasePlanTest;
 import com.facebook.presto.sql.planner.assertions.ExpressionMatcher;
@@ -123,12 +126,14 @@ import static com.facebook.presto.sql.planner.assertions.PlanMatchPattern.topN;
 import static com.facebook.presto.sql.planner.assertions.PlanMatchPattern.topNRowNumber;
 import static com.facebook.presto.sql.planner.assertions.PlanMatchPattern.values;
 import static com.facebook.presto.sql.planner.assertions.PlanMatchPattern.window;
+import static com.facebook.presto.sql.planner.iterative.Plans.resolveGroupReferences;
 import static com.facebook.presto.sql.planner.optimizations.PlanNodeSearcher.searchFrom;
 import static com.facebook.presto.sql.planner.plan.ExchangeNode.Scope.LOCAL;
 import static com.facebook.presto.sql.planner.plan.ExchangeNode.Scope.REMOTE_STREAMING;
 import static com.facebook.presto.sql.planner.plan.ExchangeNode.Type.GATHER;
 import static com.facebook.presto.sql.planner.plan.ExchangeNode.Type.REPARTITION;
 import static com.facebook.presto.sql.planner.plan.ExchangeNode.Type.REPLICATE;
+import static com.facebook.presto.sql.planner.planPrinter.PlanPrinter.textLogicalPlan;
 import static com.facebook.presto.sql.tree.SortItem.NullOrdering.LAST;
 import static com.facebook.presto.sql.tree.SortItem.Ordering.ASCENDING;
 import static com.facebook.presto.sql.tree.SortItem.Ordering.DESCENDING;
@@ -1587,6 +1592,31 @@ public class TestLogicalPlanner
                                                                 any(
                                                                         tableScan("nation", ImmutableMap.of("name", "name", "regionkey", "regionkey"))))))
                                                 .withAlias("row_num", new RowNumberSymbolMatcher())))));
+
+        Session enableOffsetWithConcurrency = Session.builder(this.getQueryRunner().getDefaultSession())
+                .setSystemProperty(OFFSET_CLAUSE_ENABLED, "true")
+                .setSystemProperty("task_concurrency", "2") // task_concurrency > 1 required to add possible local exchanges that fail this test for incorrect AddLocalExchanges
+                .build();
+
+        assertPlanWithSession("SELECT totalprice FROM orders ORDER BY totalprice OFFSET 1 LIMIT 512",
+                enableOffsetWithConcurrency,
+                false,
+                any(
+                        strictProject(
+                                ImmutableMap.of("totalprice", new ExpressionMatcher("totalprice")),
+                                limit(
+                                        512,
+                                        filter(
+                                                "row_num > BIGINT '1'",
+                                                rowNumber(
+                                                        pattern -> pattern
+                                                                .partitionBy(ImmutableList.of()),
+                                                        anyTree(
+                                                                sort(
+                                                                        ImmutableList.of(sort("totalprice", ASCENDING, LAST)),
+                                                                        any(
+                                                                                tableScan("orders", ImmutableMap.of("totalprice", "totalprice"))))))
+                                                        .withAlias("row_num", new RowNumberSymbolMatcher()))))));
     }
 
     private Session noJoinReordering()

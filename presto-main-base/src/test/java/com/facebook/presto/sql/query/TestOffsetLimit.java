@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
+import static com.facebook.presto.SystemSessionProperties.OFFSET_CLAUSE_ENABLED;
 import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
 import static com.facebook.presto.testing.assertions.Assert.assertEquals;
 import static com.facebook.presto.tpch.TpchMetadata.TINY_SCHEMA_NAME;
@@ -39,7 +40,7 @@ public class TestOffsetLimit
         Session session = testSessionBuilder()
                 .setCatalog("tpch")
                 .setSchema(TINY_SCHEMA_NAME)
-                .setSystemProperty("offset_clause_enabled", "true")
+                .setSystemProperty(OFFSET_CLAUSE_ENABLED, "true")
                 .build();
         runner = new LocalQueryRunner(session);
         runner.createCatalog(session.getCatalog().get(), new TpchConnectorFactory(1), ImmutableMap.of());
