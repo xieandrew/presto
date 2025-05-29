@@ -259,7 +259,7 @@ public class AddLocalExchanges
             }
             // sort requires that all data be in one stream
             // this node changes the input organization completely, so we do not pass through parent preferences
-            return planAndEnforceChildren(node, singleStream(), defaultParallelism(session));
+            return planAndEnforceChildren(node, singleStream(), parentPreferences.withDefaultParallelism(session));
         }
 
         @Override
@@ -267,7 +267,7 @@ public class AddLocalExchanges
         {
             // analyze finish requires that all data be in one stream
             // this node changes the input organization completely, so we do not pass through parent preferences
-            return planAndEnforceChildren(node, singleStream(), defaultParallelism(session));
+            return planAndEnforceChildren(node, singleStream(), context.withDefaultParallelism(session));
         }
 
         @Override
@@ -275,7 +275,7 @@ public class AddLocalExchanges
         {
             // table commit requires that all data be in one stream
             // this node changes the input organization completely, so we do not pass through parent preferences
-            return planAndEnforceChildren(node, singleStream(), defaultParallelism(session));
+            return planAndEnforceChildren(node, singleStream(), parentPreferences.withDefaultParallelism(session));
         }
 
         @Override
@@ -293,7 +293,7 @@ public class AddLocalExchanges
             return planAndEnforceChildren(
                     node,
                     singleStream(),
-                    defaultParallelism(session));
+                    parentPreferences.withDefaultParallelism(session));
         }
 
         @Override
@@ -335,7 +335,7 @@ public class AddLocalExchanges
             else {
                 // a final changes the input organization completely, so we do not pass through parent preferences
                 requiredProperties = singleStream();
-                preferredProperties = defaultParallelism(session);
+                preferredProperties = parentPreferences.withDefaultParallelism(session);
             }
 
             return planAndEnforceChildren(node, requiredProperties, preferredProperties);
@@ -740,7 +740,7 @@ public class AddLocalExchanges
             return planAndEnforceChildren(
                     node,
                     isEnforceFixedDistributionForOutputOperator(session) ? fixedParallelism() : any(),
-                    defaultParallelism(session));
+                    defaultParallelism(session)); // Cannot pass parentPreferences here, breaks tests
         }
 
         @Override
@@ -844,7 +844,7 @@ public class AddLocalExchanges
             StreamPreferredProperties buildPreference;
             if (getTaskConcurrency(session) > 1) {
                 if (nativeExecution && !isNativeJoinBuildPartitionEnforced(session)) {
-                    buildPreference = defaultParallelism(session);
+                    buildPreference = parentPreferences.withDefaultParallelism(session);
                 }
                 else {
                     buildPreference = exactlyPartitionedOn(buildHashVariables);
