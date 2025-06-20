@@ -60,8 +60,10 @@ public class PlanCheckerRouterPluginPrestoClient
 
     public Optional<URI> getCompatibleClusterURI(Map<String, List<String>> headers, String statement, Principal principal, String remoteUserAddr)
     {
+        log.info("Making an analyze call now for", statement);
         String newSql = ANALYZE_CALL + statement;
         ClientSession clientSession = parseHeadersToClientSession(headers, principal, remoteUserAddr);
+        log.info("Successfully parsed all the headers", clientSession);
         boolean isNativeCompatible = true;
         // submit initial query
         try (StatementClient client = newStatementClient(httpClient, clientSession, newSql)) {

@@ -129,6 +129,7 @@ public class TestPlanCheckerRouterPlugin
     {
         return PrestoNativeQueryRunnerUtils.javaHiveQueryRunnerBuilder()
                 .setAddStorageFormatToPath(true)
+                .setStorageFormat(storageFormat)
                 .build();
     }
 

@@ -221,7 +221,7 @@ public class ClusterManager
                 //Set remote cluster infos in the custom plugin scheduler
                 Map<URI, RemoteClusterInfo> healthyRemoteClusterInfos = Maps.filterValues(remoteClusterInfos, RemoteState::isHealthy);
                 config.getScheduler().setClusterInfos(ImmutableMap.copyOf(healthyRemoteClusterInfos));
-
+                log.info("Making the getDestination call now!");
                 return config.getScheduler().getDestination(requestInfo.toRouterRequestInfo());
             }
             catch (Exception e) {

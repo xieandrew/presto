@@ -13,6 +13,7 @@
  */
 package com.facebook.presto.router.scheduler;
 
+import com.facebook.airlift.log.Logger;
 import com.facebook.presto.spi.router.RouterRequestInfo;
 import com.facebook.presto.spi.router.Scheduler;
 import io.airlift.units.Duration;
@@ -29,6 +30,7 @@ import static java.util.Objects.requireNonNull;
 public class PlanCheckerRouterPluginScheduler
         implements Scheduler
 {
+    private static final Logger log = Logger.get(PlanCheckerRouterPluginScheduler.class);
     private final AtomicInteger planCheckerClusterCandidateIndex = new AtomicInteger(0);
 
     private List<URI> candidates;
@@ -53,6 +55,7 @@ public class PlanCheckerRouterPluginScheduler
     @Override
     public Optional<URI> getDestination(RouterRequestInfo routerRequestInfo)
     {
+        log.info("Reached here at getDestination", routerRequestInfo);
         PlanCheckerRouterPluginPrestoClient planCheckerPrestoClient = new PlanCheckerRouterPluginPrestoClient(getValidatorDestination(), javaRouterURI, nativeRouterURI, clientRequestTimeout);
         return planCheckerPrestoClient.getCompatibleClusterURI(routerRequestInfo.getHeaders(), routerRequestInfo.getQuery(), routerRequestInfo.getPrincipal(), routerRequestInfo.getRemoteUserAddr());
     }
@@ -66,6 +69,7 @@ public class PlanCheckerRouterPluginScheduler
     private URI getValidatorDestination()
     {
         int currentIndex = planCheckerClusterCandidateIndex.getAndUpdate(i -> (i + 1) % planCheckerClusterCandidates.size());
+        log.info("Successfully retrieved the validators", planCheckerClusterCandidates.size());
         return planCheckerClusterCandidates.get(currentIndex);
     }
 }
