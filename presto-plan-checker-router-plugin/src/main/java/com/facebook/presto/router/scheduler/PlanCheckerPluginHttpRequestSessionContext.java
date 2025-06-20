@@ -38,8 +38,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.facebook.airlift.json.JsonCodec.jsonCodec;
 import static com.facebook.presto.client.PrestoHeaders.PRESTO_CATALOG;
@@ -69,6 +71,7 @@ import static com.google.common.net.HttpHeaders.USER_AGENT;
 import static com.google.common.net.HttpHeaders.X_FORWARDED_FOR;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Locale.ROOT;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toMap;
@@ -107,7 +110,19 @@ public class PlanCheckerPluginHttpRequestSessionContext
 
     public PlanCheckerPluginHttpRequestSessionContext(String user, Map<String, List<String>> headerMap, SqlParserOptions sqlParserOptions, Principal userPrincipal, String remoteUserAddr)
     {
-        this.headerMap = requireNonNull(headerMap, "headerMap is null");
+        requireNonNull(headerMap, "headerMap is null");
+        // Normalize header keys to lowercase
+        this.headerMap = headerMap.entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().toLowerCase(ROOT),
+                        Entry::getValue,
+                        (existing, replacement) -> {
+                            // Merge list entries for duplicate keys
+                            existing.addAll(replacement);
+                            return existing;
+                        },
+                        HashMap::new));
         catalog = trimEmptyToNull(getHeader(PRESTO_CATALOG));
         schema = trimEmptyToNull(getHeader(PRESTO_SCHEMA));
         assertRequest((catalog != null) || (schema == null), "Schema is set but catalog is not");
@@ -238,7 +253,7 @@ public class PlanCheckerPluginHttpRequestSessionContext
 
     public String getHeader(String header)
     {
-        return headerMap.getOrDefault(header, emptyList())
+        return headerMap.getOrDefault(header.toLowerCase(ROOT), emptyList())
                 .stream()
                 .findFirst()
                 .orElse(null);
