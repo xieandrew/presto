@@ -69,18 +69,21 @@ public class TestPlanCheckerRouterPlugin
     private PlanCheckerRouterPluginPrestoClient planCheckerRouterPluginPrestoClient;
 
     @BeforeClass
-    public void setup()
-            throws IOException
+    public void init()
+            throws Exception
     {
-        Logging.initialize();
-
         storageFormat = System.getProperty("storageFormat", "PARQUET");
         sidecarEnabled = parseBoolean(System.getProperty("sidecarEnabled", "true"));
+        super.init();
+        Logging.initialize();
+
         // for testing purposes, we can skip the router chaining part and specify the native/java clusters directly here
+        URI nativeClusterURI = ((DistributedQueryRunner) getQueryRunner()).getCoordinator().getBaseUrl();
+        URI javaClusterURI = ((DistributedQueryRunner) getExpectedQueryRunner()).getCoordinator().getBaseUrl();
         PlanCheckerRouterPluginConfig planCheckerRouterConfig = new PlanCheckerRouterPluginConfig()
-                .setPlanCheckClustersURIs(((DistributedQueryRunner) getQueryRunner()).getCoordinator().getBaseUrl().toString())
-                .setJavaRouterURI(((DistributedQueryRunner) getExpectedQueryRunner()).getCoordinator().getBaseUrl())
-                .setNativeRouterURI(((DistributedQueryRunner) getQueryRunner()).getCoordinator().getBaseUrl());
+                .setPlanCheckClustersURIs(nativeClusterURI.toString())
+                .setJavaRouterURI(javaClusterURI)
+                .setNativeRouterURI(nativeClusterURI);
 
         planCheckerRouterPluginPrestoClient = new PlanCheckerRouterPluginPrestoClient(
                 planCheckerRouterConfig.getPlanCheckClustersURIs().get(0),
