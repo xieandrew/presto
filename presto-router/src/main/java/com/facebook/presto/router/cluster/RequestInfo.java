@@ -13,6 +13,7 @@
  */
 package com.facebook.presto.router.cluster;
 
+import com.facebook.airlift.log.Logger;
 import com.facebook.presto.spi.router.RouterRequestInfo;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -35,6 +36,7 @@ import static java.util.Objects.requireNonNull;
 
 public class RequestInfo
 {
+    private static final Logger log = Logger.get(RequestInfo.class);
     private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
     private final String user;
@@ -101,6 +103,7 @@ public class RequestInfo
 
     private static Map<String, List<String>> parseHeaders(HttpServletRequest httpServletRequest)
     {
+        log.info("Header names: %s", httpServletRequest.getHeaderNames());
         ImmutableMap.Builder<String, List<String>> builder = ImmutableMap.builder();
         Enumeration<String> headerNames = httpServletRequest.getHeaderNames();
         while (headerNames.hasMoreElements()) {
@@ -108,6 +111,7 @@ public class RequestInfo
             Enumeration<String> values = httpServletRequest.getHeaders(headerName);
             builder.put(headerName, list(values));
         }
+        log.info("Header map created in RequestInfo : %s", builder.build());
         return builder.build();
     }
 }

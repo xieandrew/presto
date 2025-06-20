@@ -57,7 +57,7 @@ public class PlanCheckerRouterPluginScheduler
     {
         log.info("Reached here at getDestination", routerRequestInfo);
         PlanCheckerRouterPluginPrestoClient planCheckerPrestoClient = new PlanCheckerRouterPluginPrestoClient(getValidatorDestination(), javaRouterURI, nativeRouterURI, clientRequestTimeout);
-        return planCheckerPrestoClient.getCompatibleClusterURI(routerRequestInfo.getHeaders(), routerRequestInfo.getQuery(), routerRequestInfo.getPrincipal(), routerRequestInfo.getRemoteUserAddr());
+        return planCheckerPrestoClient.getCompatibleClusterURI(routerRequestInfo.getUser(), routerRequestInfo.getHeaders(), routerRequestInfo.getQuery(), routerRequestInfo.getPrincipal(), routerRequestInfo.getRemoteUserAddr());
     }
 
     @Override

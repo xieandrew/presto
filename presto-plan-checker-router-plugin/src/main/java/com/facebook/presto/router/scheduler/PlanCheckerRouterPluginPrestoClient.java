@@ -58,11 +58,11 @@ public class PlanCheckerRouterPluginPrestoClient
         this.clientRequestTimeout = clientRequestTimeout;
     }
 
-    public Optional<URI> getCompatibleClusterURI(Map<String, List<String>> headers, String statement, Principal principal, String remoteUserAddr)
+    public Optional<URI> getCompatibleClusterURI(String user, Map<String, List<String>> headers, String statement, Principal principal, String remoteUserAddr)
     {
         log.info("Making an analyze call now for", statement);
         String newSql = ANALYZE_CALL + statement;
-        ClientSession clientSession = parseHeadersToClientSession(headers, principal, remoteUserAddr);
+        ClientSession clientSession = parseHeadersToClientSession(user, headers, principal, remoteUserAddr);
         log.info("Successfully parsed all the headers", clientSession);
         boolean isNativeCompatible = true;
         // submit initial query
@@ -117,10 +117,12 @@ public class PlanCheckerRouterPluginPrestoClient
         return nativeClusterRedirectRequests;
     }
 
-    private ClientSession parseHeadersToClientSession(Map<String, List<String>> headers, Principal principal, String remoteUserAddr)
+    private ClientSession parseHeadersToClientSession(String user, Map<String, List<String>> headers, Principal principal, String remoteUserAddr)
     {
+        log.info("header map: %s", headers);
         PlanCheckerPluginHttpRequestSessionContext sessionContext =
                 new PlanCheckerPluginHttpRequestSessionContext(
+                        user,
                         headers,
                         new SqlParserOptions(),
                         principal,

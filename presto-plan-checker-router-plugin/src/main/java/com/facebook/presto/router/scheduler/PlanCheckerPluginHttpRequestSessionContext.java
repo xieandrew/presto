@@ -56,7 +56,6 @@ import static com.facebook.presto.client.PrestoHeaders.PRESTO_SESSION_FUNCTION;
 import static com.facebook.presto.client.PrestoHeaders.PRESTO_SOURCE;
 import static com.facebook.presto.client.PrestoHeaders.PRESTO_TIME_ZONE;
 import static com.facebook.presto.client.PrestoHeaders.PRESTO_TRANSACTION_ID;
-import static com.facebook.presto.client.PrestoHeaders.PRESTO_USER;
 import static com.facebook.presto.spi.session.ResourceEstimates.CPU_TIME;
 import static com.facebook.presto.spi.session.ResourceEstimates.EXECUTION_TIME;
 import static com.facebook.presto.spi.session.ResourceEstimates.PEAK_MEMORY;
@@ -106,14 +105,13 @@ public class PlanCheckerPluginHttpRequestSessionContext
     private final RuntimeStats runtimeStats = new RuntimeStats();
     private final Map<String, List<String>> headerMap;
 
-    public PlanCheckerPluginHttpRequestSessionContext(Map<String, List<String>> headerMap, SqlParserOptions sqlParserOptions, Principal userPrincipal, String remoteUserAddr)
+    public PlanCheckerPluginHttpRequestSessionContext(String user, Map<String, List<String>> headerMap, SqlParserOptions sqlParserOptions, Principal userPrincipal, String remoteUserAddr)
     {
         this.headerMap = requireNonNull(headerMap, "headerMap is null");
         catalog = trimEmptyToNull(getHeader(PRESTO_CATALOG));
         schema = trimEmptyToNull(getHeader(PRESTO_SCHEMA));
         assertRequest((catalog != null) || (schema == null), "Schema is set but catalog is not");
 
-        String user = trimEmptyToNull(trimEmptyToNull(getHeader(PRESTO_USER)));
         assertRequest(user != null, "User must be set");
         identity = new Identity(
                 user,

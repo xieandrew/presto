@@ -222,6 +222,7 @@ public class ClusterManager
                 Map<URI, RemoteClusterInfo> healthyRemoteClusterInfos = Maps.filterValues(remoteClusterInfos, RemoteState::isHealthy);
                 config.getScheduler().setClusterInfos(ImmutableMap.copyOf(healthyRemoteClusterInfos));
                 log.info("Making the getDestination call now!");
+                log.info("Printing the router headers: %s", requestInfo.getHeadersMap());
                 return config.getScheduler().getDestination(requestInfo.toRouterRequestInfo());
             }
             catch (Exception e) {
